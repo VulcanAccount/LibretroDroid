@@ -452,8 +452,7 @@ namespace libretrodroid {
             input = std::make_unique<Input>();
             if (!fpsSync || !audio) {
                 LOGE("Param is not initialized. Call create() before step().");
-                throw std::runtime_error("Param is not initialized");
-                return;
+                afterGameLoad()
             }
             fpsSync->reset();
             audio->start();
@@ -646,6 +645,10 @@ namespace libretrodroid {
 
     void LibretroDroid::afterGameLoad() {
         struct retro_system_av_info system_av_info{};
+        if (!core) {
+            LOGE("Core is not initialized. Call create() before afterGameLoad().");
+            throw std::runtime_error("Core is not initialized");
+        }
         core->retro_get_system_av_info(&system_av_info);
 
         fpsSync = std::make_unique<FPSSync>(system_av_info.timing.fps, screenRefreshRate);
