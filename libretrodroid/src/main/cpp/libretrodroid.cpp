@@ -323,9 +323,7 @@ namespace libretrodroid {
             bool result = core->retro_load_game(&game_info);
             if (!result) {
                 LOGE("Cannot load game. Leaving.");
-                /*
                 throw std::runtime_error("Cannot load game");
-                */
             } else {
                 afterGameLoad();
             }
