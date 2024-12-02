@@ -19,46 +19,62 @@
 #include "fpssync.h"
 #include "log.h"
 
+std::mutex fpsSyncMutex;
+
 namespace libretrodroid {
 
-unsigned FPSSync::advanceFrames() {
-    if (useVSync) return 1;
+    private
+    bool isInitialized = false;
 
-    if (lastFrame == MIN_TIME) {
-        start();
+    unsigned FPSSync::advanceFrames() {
+        if (useVSync) return 1;
+
+        if (!isInitialized) {  // Kiểm tra trạng thái thay vì so sánh với MIN_TIME
+            start();
+            isInitialized = true;  // Đánh dấu đã khởi tạo
+        }
+//        if (lastFrame == MIN_TIME) {
+//            start();
+//        }
+
+        auto now = std::chrono::steady_clock::now();
+        auto frames = std::max((now - lastFrame) / sampleInterval, (long long) 1);
+        lastFrame = lastFrame + sampleInterval * frames;
+
+        return frames;
     }
 
-    auto now = std::chrono::steady_clock::now();
-    auto frames = std::max((now - lastFrame) / sampleInterval, (long long) 1);
-    lastFrame = lastFrame + sampleInterval * frames;
+    FPSSync::FPSSync(double contentRefreshRate, double screenRefreshRate) {
+        this->contentRefreshRate = contentRefreshRate;
+        this->screenRefreshRate = screenRefreshRate;
+        this->useVSync = std::abs(contentRefreshRate - screenRefreshRate) < FPS_TOLERANCE;
+        this->sampleInterval = std::chrono::microseconds((long) ((1000000L / contentRefreshRate)));
+        reset();
+    }
 
-    return frames;
-}
+    void FPSSync::start() {
+        LOGI("Starting game with fps %f on a screen with refresh rate %f. Using vsync: %d",
+             contentRefreshRate, screenRefreshRate, useVSync);
+        lastFrame = std::chrono::steady_clock::now();
+    }
 
-FPSSync::FPSSync(double contentRefreshRate, double screenRefreshRate) {
-    this->contentRefreshRate = contentRefreshRate;
-    this->screenRefreshRate = screenRefreshRate;
-    this->useVSync = std::abs(contentRefreshRate - screenRefreshRate) < FPS_TOLERANCE;
-    this->sampleInterval = std::chrono::microseconds((long) ((1000000L / contentRefreshRate)));
-    reset();
-}
+    void FPSSync::reset() {
+        try {
+//            lastFrame = MIN_TIME;
+            isInitialized = false;
+            lastFrame = std::chrono::steady_clock::now();
+        } catch (...) {
 
-void FPSSync::start() {
-    LOGI("Starting game with fps %f on a screen with refresh rate %f. Using vsync: %d", contentRefreshRate, screenRefreshRate, useVSync);
-    lastFrame = std::chrono::steady_clock::now();
-}
+        }
+    }
 
-void FPSSync::reset() {
-    lastFrame = MIN_TIME;
-}
+    double FPSSync::getTimeStretchFactor() {
+        return useVSync ? contentRefreshRate / screenRefreshRate : 1.0;
+    }
 
-double FPSSync::getTimeStretchFactor() {
-    return useVSync ? contentRefreshRate / screenRefreshRate : 1.0;
-}
-
-void FPSSync::wait() {
-    if (useVSync) return;
-    std::this_thread::sleep_until(lastFrame);
-}
+    void FPSSync::wait() {
+        if (useVSync) return;
+        std::this_thread::sleep_until(lastFrame);
+    }
 
 } //namespace libretrodroid
