@@ -456,7 +456,7 @@ namespace libretrodroid {
                     LOGE("fpsSync is not initialized. Call create() before step().");
                 if (!audio)
                     LOGE("audio is not initialized. Call create() before step().");
-                afterGameLoad()
+                afterGameLoad();
             }
             fpsSync->reset();
             audio->start();
