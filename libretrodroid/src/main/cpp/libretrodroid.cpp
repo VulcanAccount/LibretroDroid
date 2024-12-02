@@ -89,6 +89,7 @@ namespace libretrodroid {
 
 // TODO... Do we really need this?
     void LibretroDroid::resetGlobalVariables() {
+        LOGI("LibretroDroid::resetGlobalVariables()");
         core = nullptr;
         audio = nullptr;
         video = nullptr;
@@ -423,7 +424,7 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::destroy() {
-        LOGD("Performing libretrodroid destroy");
+        LOGI("LibretroDroid::destroy()");
 
         if (Environment::getInstance().getHwContextDestroy() != nullptr) {
             Environment::getInstance().getHwContextDestroy()();
@@ -447,11 +448,14 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::resume() {
+        LOGI("Call resume");
         try {
-
             input = std::make_unique<Input>();
             if (!fpsSync || !audio) {
-                LOGE("Param is not initialized. Call create() before step().");
+                if (!fpsSync)
+                    LOGE("fpsSync is not initialized. Call create() before step().");
+                if (!audio)
+                    LOGE("audio is not initialized. Call create() before step().");
                 afterGameLoad()
             }
             fpsSync->reset();
@@ -645,6 +649,7 @@ namespace libretrodroid {
 
     void LibretroDroid::afterGameLoad() {
         struct retro_system_av_info system_av_info{};
+        LOGI("Call afterGameLoad");
         if (!core) {
             LOGE("Core is not initialized. Call create() before afterGameLoad().");
             throw std::runtime_error("Core is not initialized");
