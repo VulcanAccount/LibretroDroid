@@ -189,48 +189,40 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::onSurfaceCreated() {
-        LOGD("Entering onSurfaceCreated()...");
+        LOGD("Performing libretrodroid onSurfaceCreated");
+        struct retro_system_av_info system_av_info{};
         try {
-            LOGD("Performing libretrodroid onSurfaceCreated");
-            try {
-            } catch (const std::exception &e) {
-                LOGE("Exception in onSurfaceCreated: %s", e.what());
-            } catch (...) {
-                LOGE("Unknown error in onSurfaceCreated");
-            }
             core->retro_get_system_av_info(&system_av_info);
-
-            video = nullptr;
-
-            Video::RenderingOptions renderingOptions{
-                    Environment::getInstance().isUseHwAcceleration(),
-                    system_av_info.geometry.base_width,
-                    system_av_info.geometry.base_height,
-                    Environment::getInstance().isUseDepth(),
-                    Environment::getInstance().isUseStencil(),
-                    openglESVersion,
-                    Environment::getInstance().getPixelFormat()
-            };
-
-            auto newVideo = new Video(
-                    renderingOptions,
-                    fragmentShaderConfig,
-                    Environment::getInstance().isBottomLeftOrigin(),
-                    Environment::getInstance().getScreenRotation(),
-                    skipDuplicateFrames
-            );
-
-            video = std::unique_ptr<Video>(newVideo);
-
-            if (Environment::getInstance().getHwContextReset() != nullptr) {
-                Environment::getInstance().getHwContextReset()();
-            }
-        } catch (...) {
-            LOGE("Error onSurfaceCreated");
         } catch (const std::exception &e) {
             LOGE("Exception in onSurfaceCreated: %s", e.what());
         } catch (...) {
             LOGE("Unknown error in onSurfaceCreated");
+        }
+
+        video = nullptr;
+
+        Video::RenderingOptions renderingOptions{
+                Environment::getInstance().isUseHwAcceleration(),
+                system_av_info.geometry.base_width,
+                system_av_info.geometry.base_height,
+                Environment::getInstance().isUseDepth(),
+                Environment::getInstance().isUseStencil(),
+                openglESVersion,
+                Environment::getInstance().getPixelFormat()
+        };
+
+        auto newVideo = new Video(
+                renderingOptions,
+                fragmentShaderConfig,
+                Environment::getInstance().isBottomLeftOrigin(),
+                Environment::getInstance().getScreenRotation(),
+                skipDuplicateFrames
+        );
+
+        video = std::unique_ptr<Video>(newVideo);
+
+        if (Environment::getInstance().getHwContextReset() != nullptr) {
+            Environment::getInstance().getHwContextReset()();
         }
     } catch (const std::exception &e) {
         LOGE("Exception in onSurfaceCreated: %s", e.what());

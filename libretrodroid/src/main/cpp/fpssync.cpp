@@ -52,7 +52,6 @@ namespace libretrodroid {
         reset();
     }
 
-    std::lock_guard<std::mutex> lock(fpsSyncMutex);
     void FPSSync::start() {
         LOGI("Starting game with fps %f on a screen with refresh rate %f. Using vsync: %d",
              contentRefreshRate, screenRefreshRate, useVSync);
