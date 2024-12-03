@@ -415,7 +415,7 @@ namespace libretrodroid {
             fpsSync->reset();
             audio->start();
         } catch (...) {
-            LOGE("Error LibretroDroid::resume")
+            LOGE("Error LibretroDroid::resume");
         }
     }
 
@@ -426,7 +426,7 @@ namespace libretrodroid {
 
             input = nullptr;
         } catch (...) {
-            LOGE("Error LibretroDroid::pause")
+            LOGE("Error LibretroDroid::pause");
         }
     }
 
@@ -474,7 +474,7 @@ namespace libretrodroid {
                 video->updateRotation(Environment::getInstance().getScreenRotation());
             }
         } catch (...) {
-            LOGE("Error LibretroDroid::step")
+            LOGE("Error LibretroDroid::step");
         }
     }
 
@@ -552,7 +552,7 @@ namespace libretrodroid {
         try {
             core->retro_reset();
         } catch (...) {
-            LOGE("Error LibretroDroid::reset")
+            LOGE("Error LibretroDroid::reset");
         }
     }
 
@@ -569,7 +569,7 @@ namespace libretrodroid {
         try {
             core->retro_cheat_reset();
         } catch (...) {
-            LOGE("Error LibretroDroid::resetCheat")
+            LOGE("Error LibretroDroid::resetCheat");
         }
     }
 
