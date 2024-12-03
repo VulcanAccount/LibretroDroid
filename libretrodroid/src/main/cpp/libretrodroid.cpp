@@ -221,9 +221,9 @@ namespace libretrodroid {
             LOGI("Performing libretrodroid onSurfaceCreated newVideo");
             video = std::unique_ptr<Video>(newVideo);
 
-            if (Environment::getInstance().getHwContextReset() != nullptr) {
-                Environment::getInstance().getHwContextReset()();
-            }
+//            if (Environment::getInstance().getHwContextReset() != nullptr) {
+//                Environment::getInstance().getHwContextReset()();
+//            }
             LOGI("Performing libretrodroid onSurfaceCreated getHwContextReset");
         } catch (const std::exception &e) {
             LOGE("Exception in onSurfaceCreated: %s", e.what());

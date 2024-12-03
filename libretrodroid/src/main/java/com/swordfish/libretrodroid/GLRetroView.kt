@@ -312,19 +312,19 @@ class GLRetroView(
             data.gameFileBytes != null -> loadGameFromBytes(data.gameFileBytes!!)
             data.gameVirtualFiles.isNotEmpty() -> loadGameFromVirtualFiles(data.gameVirtualFiles)
         }
-        Log.i("libretrodroid","Performing  loadGame");
+        Log.i("libretrodroid","Performing initializeCore loadGame");
         data.saveRAMState?.let {
             LibretroDroid.unserializeSRAM(data.saveRAMState)
             data.saveRAMState = null
         }
-        Log.i("libretrodroid","Performing   LibretroDroid.onSurfaceCreated()");
+        Log.i("libretrodroid","Performing  initializeCore  LibretroDroid.onSurfaceCreated()");
         LibretroDroid.onSurfaceCreated()
         isGameLoaded = true
-
+        Log.i("libretrodroid","Performing initializeCore  isGameLoaded");
         KtUtils.runOnUIThread {
             lifecycle?.addObserver(RenderLifecycleObserver())
         }
-        Log.i("libretrodroid","Performing  RenderLifecycleObserver");
+        Log.i("libretrodroid","Performing initializeCore  RenderLifecycleObserver");
     }
 
     private fun loadGameFromVirtualFiles(virtualFiles: List<VirtualFile>) {
