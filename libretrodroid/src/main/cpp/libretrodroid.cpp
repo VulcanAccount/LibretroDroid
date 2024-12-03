@@ -185,35 +185,39 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::onSurfaceCreated() {
-        LOGI("Performing libretrodroid onSurfaceCreated");
+        try {
+            LOGI("Performing libretrodroid onSurfaceCreated");
 
-        struct retro_system_av_info system_av_info{};
-        core->retro_get_system_av_info(&system_av_info);
+            struct retro_system_av_info system_av_info{};
+            core->retro_get_system_av_info(&system_av_info);
 
-        video = nullptr;
+            video = nullptr;
 
-        Video::RenderingOptions renderingOptions{
-                Environment::getInstance().isUseHwAcceleration(),
-                system_av_info.geometry.base_width,
-                system_av_info.geometry.base_height,
-                Environment::getInstance().isUseDepth(),
-                Environment::getInstance().isUseStencil(),
-                openglESVersion,
-                Environment::getInstance().getPixelFormat()
-        };
+            Video::RenderingOptions renderingOptions{
+                    Environment::getInstance().isUseHwAcceleration(),
+                    system_av_info.geometry.base_width,
+                    system_av_info.geometry.base_height,
+                    Environment::getInstance().isUseDepth(),
+                    Environment::getInstance().isUseStencil(),
+                    openglESVersion,
+                    Environment::getInstance().getPixelFormat()
+            };
 
-        auto newVideo = new Video(
-                renderingOptions,
-                fragmentShaderConfig,
-                Environment::getInstance().isBottomLeftOrigin(),
-                Environment::getInstance().getScreenRotation(),
-                skipDuplicateFrames
-        );
+            auto newVideo = new Video(
+                    renderingOptions,
+                    fragmentShaderConfig,
+                    Environment::getInstance().isBottomLeftOrigin(),
+                    Environment::getInstance().getScreenRotation(),
+                    skipDuplicateFrames
+            );
 
-        video = std::unique_ptr<Video>(newVideo);
+            video = std::unique_ptr<Video>(newVideo);
 
-        if (Environment::getInstance().getHwContextReset() != nullptr) {
-            Environment::getInstance().getHwContextReset()();
+            if (Environment::getInstance().getHwContextReset() != nullptr) {
+                Environment::getInstance().getHwContextReset()();
+            }
+        } catch (const std::exception &e) {
+            LOGE("onSurfaceCreated catch");
         }
     }
 
