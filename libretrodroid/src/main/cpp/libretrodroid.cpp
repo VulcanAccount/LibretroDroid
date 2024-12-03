@@ -181,40 +181,61 @@ namespace libretrodroid {
 
     void LibretroDroid::onSurfaceChanged(unsigned int width, unsigned int height) {
         LOGD("Performing libretrodroid onSurfaceChanged");
-        video->updateScreenSize(width, height);
+        try {
+            video->updateScreenSize(width, height);
+        } catch (...) {
+            LOGE("Error onSurfaceChanged");
+        }
     }
 
     void LibretroDroid::onSurfaceCreated() {
-        LOGD("Performing libretrodroid onSurfaceCreated");
+        LOGD("Entering onSurfaceCreated()...");
+        try {
+            LOGD("Performing libretrodroid onSurfaceCreated");
+            try {
+            } catch (const std::exception &e) {
+                LOGE("Exception in onSurfaceCreated: %s", e.what());
+            } catch (...) {
+                LOGE("Unknown error in onSurfaceCreated");
+            }
+            core->retro_get_system_av_info(&system_av_info);
 
-        struct retro_system_av_info system_av_info{};
-        core->retro_get_system_av_info(&system_av_info);
+            video = nullptr;
 
-        video = nullptr;
+            Video::RenderingOptions renderingOptions{
+                    Environment::getInstance().isUseHwAcceleration(),
+                    system_av_info.geometry.base_width,
+                    system_av_info.geometry.base_height,
+                    Environment::getInstance().isUseDepth(),
+                    Environment::getInstance().isUseStencil(),
+                    openglESVersion,
+                    Environment::getInstance().getPixelFormat()
+            };
 
-        Video::RenderingOptions renderingOptions{
-                Environment::getInstance().isUseHwAcceleration(),
-                system_av_info.geometry.base_width,
-                system_av_info.geometry.base_height,
-                Environment::getInstance().isUseDepth(),
-                Environment::getInstance().isUseStencil(),
-                openglESVersion,
-                Environment::getInstance().getPixelFormat()
-        };
+            auto newVideo = new Video(
+                    renderingOptions,
+                    fragmentShaderConfig,
+                    Environment::getInstance().isBottomLeftOrigin(),
+                    Environment::getInstance().getScreenRotation(),
+                    skipDuplicateFrames
+            );
 
-        auto newVideo = new Video(
-                renderingOptions,
-                fragmentShaderConfig,
-                Environment::getInstance().isBottomLeftOrigin(),
-                Environment::getInstance().getScreenRotation(),
-                skipDuplicateFrames
-        );
+            video = std::unique_ptr<Video>(newVideo);
 
-        video = std::unique_ptr<Video>(newVideo);
-
-        if (Environment::getInstance().getHwContextReset() != nullptr) {
-            Environment::getInstance().getHwContextReset()();
+            if (Environment::getInstance().getHwContextReset() != nullptr) {
+                Environment::getInstance().getHwContextReset()();
+            }
+        } catch (...) {
+            LOGE("Error onSurfaceCreated");
+        } catch (const std::exception &e) {
+            LOGE("Exception in onSurfaceCreated: %s", e.what());
+        } catch (...) {
+            LOGE("Unknown error in onSurfaceCreated");
         }
+    } catch (const std::exception &e) {
+        LOGE("Exception in onSurfaceCreated: %s", e.what());
+    } catch (...) {
+        LOGE("Unknown error in onSurfaceCreated");
     }
 
     void LibretroDroid::onMotionEvent(
@@ -251,45 +272,49 @@ namespace libretrodroid {
     ) {
         LOGD("Performing libretrodroid create");
 
-        resetGlobalVariables();
+        try {
+            resetGlobalVariables();
 
-        Environment::getInstance().initialize(systemDir, savesDir,
-                                              &callback_get_current_framebuffer);
-        Environment::getInstance().setLanguage(language);
-        Environment::getInstance().setEnableVirtualFileSystem(enableVirtualFileSystem);
+            Environment::getInstance().initialize(systemDir, savesDir,
+                                                  &callback_get_current_framebuffer);
+            Environment::getInstance().setLanguage(language);
+            Environment::getInstance().setEnableVirtualFileSystem(enableVirtualFileSystem);
 
-        openglESVersion = GLESVersion;
-        screenRefreshRate = refreshRate;
-        skipDuplicateFrames = duplicateFrames;
-        audioEnabled = true;
-        frameSpeed = 1;
+            openglESVersion = GLESVersion;
+            screenRefreshRate = refreshRate;
+            skipDuplicateFrames = duplicateFrames;
+            audioEnabled = true;
+            frameSpeed = 1;
 
-        core = std::make_unique<Core>(soFilePath);
+            core = std::make_unique<Core>(soFilePath);
 
-        core->retro_set_video_refresh(&callback_hw_video_refresh);
-        core->retro_set_environment(&Environment::callback_environment);
-        core->retro_set_audio_sample(&callback_audio_sample);
-        core->retro_set_audio_sample_batch(&callback_set_audio_sample_batch);
-        core->retro_set_input_poll(&callback_retro_set_input_poll);
-        core->retro_set_input_state(&callback_set_input_state);
+            core->retro_set_video_refresh(&callback_hw_video_refresh);
+            core->retro_set_environment(&Environment::callback_environment);
+            core->retro_set_audio_sample(&callback_audio_sample);
+            core->retro_set_audio_sample_batch(&callback_set_audio_sample_batch);
+            core->retro_set_input_poll(&callback_retro_set_input_poll);
+            core->retro_set_input_state(&callback_set_input_state);
 
-        std::for_each(variables.begin(), variables.end(), [&](const Variable &v) {
-            updateVariable(v);
-        });
+            std::for_each(variables.begin(), variables.end(), [&](const Variable &v) {
+                updateVariable(v);
+            });
 
-        core->retro_init();
+            core->retro_init();
 
-        preferLowLatencyAudio = lowLatencyAudio;
+            preferLowLatencyAudio = lowLatencyAudio;
 
-        // HW accelerated cores are only supported on opengles 3.
-        if (Environment::getInstance().isUseHwAcceleration() && openglESVersion < 3) {
-            throw LibretroDroidError("OpenGL ES 3 is required for this Core",
-                                     ERROR_GL_NOT_COMPATIBLE);
+            // HW accelerated cores are only supported on opengles 3.
+            if (Environment::getInstance().isUseHwAcceleration() && openglESVersion < 3) {
+                throw LibretroDroidError("OpenGL ES 3 is required for this Core",
+                                         ERROR_GL_NOT_COMPATIBLE);
+            }
+
+            fragmentShaderConfig = shaderConfig;
+
+            rumble = std::make_unique<Rumble>();
+        } catch (...) {
+
         }
-
-        fragmentShaderConfig = shaderConfig;
-
-        rumble = std::make_unique<Rumble>();
     }
 
     void LibretroDroid::loadGameFromPath(const std::string &gamePath) {
@@ -389,22 +414,25 @@ namespace libretrodroid {
 
     void LibretroDroid::destroy() {
         LOGD("Performing libretrodroid destroy");
+        try {
+            if (Environment::getInstance().getHwContextDestroy() != nullptr) {
+                Environment::getInstance().getHwContextDestroy()();
+            }
 
-        if (Environment::getInstance().getHwContextDestroy() != nullptr) {
-            Environment::getInstance().getHwContextDestroy()();
+            core->retro_unload_game();
+            core->retro_deinit();
+
+            video = nullptr;
+            core = nullptr;
+            rumble = nullptr;
+            fpsSync = nullptr;
+            audio = nullptr;
+
+            Environment::getInstance().deinitialize();
+            VFS::getInstance().deinitialize();
+        } catch (...) {
+            LOGE("Error LibretroDroid::destroy");
         }
-
-        core->retro_unload_game();
-        core->retro_deinit();
-
-        video = nullptr;
-        core = nullptr;
-        rumble = nullptr;
-        fpsSync = nullptr;
-        audio = nullptr;
-
-        Environment::getInstance().deinitialize();
-        VFS::getInstance().deinitialize();
     }
 
     void LibretroDroid::resume() {
@@ -586,23 +614,27 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::afterGameLoad() {
-        struct retro_system_av_info system_av_info{};
-        core->retro_get_system_av_info(&system_av_info);
+        try {
+            struct retro_system_av_info system_av_info{};
+            core->retro_get_system_av_info(&system_av_info);
 
-        fpsSync = std::make_unique<FPSSync>(system_av_info.timing.fps, screenRefreshRate);
+            fpsSync = std::make_unique<FPSSync>(system_av_info.timing.fps, screenRefreshRate);
 
-        double inputSampleRate =
-                system_av_info.timing.sample_rate * fpsSync->getTimeStretchFactor();
+            double inputSampleRate =
+                    system_av_info.timing.sample_rate * fpsSync->getTimeStretchFactor();
 
-        audio = std::make_unique<Audio>(
-                (int32_t) std::lround(inputSampleRate),
-                system_av_info.timing.fps,
-                preferLowLatencyAudio
-        );
+            audio = std::make_unique<Audio>(
+                    (int32_t) std::lround(inputSampleRate),
+                    system_av_info.timing.fps,
+                    preferLowLatencyAudio
+            );
 
-        updateAudioSampleRateMultiplier();
+            updateAudioSampleRateMultiplier();
 
-        defaultAspectRatio = findDefaultAspectRatio(system_av_info);
+            defaultAspectRatio = findDefaultAspectRatio(system_av_info);
+        } catch (...) {
+
+        }
     }
 
     float LibretroDroid::findDefaultAspectRatio(const retro_system_av_info &system_av_info) {

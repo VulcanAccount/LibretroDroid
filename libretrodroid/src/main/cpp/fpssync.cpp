@@ -23,7 +23,7 @@ std::mutex fpsSyncMutex;
 
 namespace libretrodroid {
 
-    private
+    // private
     bool isInitialized = false;
 
     unsigned FPSSync::advanceFrames() {
@@ -52,17 +52,20 @@ namespace libretrodroid {
         reset();
     }
 
+    std::lock_guard<std::mutex> lock(fpsSyncMutex);
     void FPSSync::start() {
         LOGI("Starting game with fps %f on a screen with refresh rate %f. Using vsync: %d",
              contentRefreshRate, screenRefreshRate, useVSync);
         lastFrame = std::chrono::steady_clock::now();
     }
 
+    std::lock_guard<std::mutex> lock(fpsSyncMutex);
     void FPSSync::reset() {
         try {
 //            lastFrame = MIN_TIME;
             isInitialized = false;
             lastFrame = std::chrono::steady_clock::now();
+            LOGE("An unexpected error occurred during reset.");
         } catch (...) {
 
         }
