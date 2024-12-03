@@ -1,3 +1,4 @@
+
 /*
  *     Copyright (C) 2019  Filippo Scognamiglio
  *
@@ -56,7 +57,7 @@ namespace libretrodroid {
             unsigned height,
             size_t pitch
     ) {
-        LOGI("hw video refresh callback called %i %i", width, height);
+        LOGD("hw video refresh callback called %i %i", width, height);
         LibretroDroid::getInstance().handleVideoRefresh(data, width, height, pitch);
     }
 
@@ -89,7 +90,6 @@ namespace libretrodroid {
 
 // TODO... Do we really need this?
     void LibretroDroid::resetGlobalVariables() {
-        LOGI("LibretroDroid::resetGlobalVariables()");
         core = nullptr;
         audio = nullptr;
         video = nullptr;
@@ -180,44 +180,40 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::onSurfaceChanged(unsigned int width, unsigned int height) {
-        LOGI("Performing libretrodroid onSurfaceChanged");
+        LOGD("Performing libretrodroid onSurfaceChanged");
         video->updateScreenSize(width, height);
     }
 
     void LibretroDroid::onSurfaceCreated() {
-        try {
-            LOGI("Performing libretrodroid onSurfaceCreated");
+        LOGD("Performing libretrodroid onSurfaceCreated");
 
-            struct retro_system_av_info system_av_info{};
-            core->retro_get_system_av_info(&system_av_info);
+        struct retro_system_av_info system_av_info{};
+        core->retro_get_system_av_info(&system_av_info);
 
-            video = nullptr;
+        video = nullptr;
 
-            Video::RenderingOptions renderingOptions{
-                    Environment::getInstance().isUseHwAcceleration(),
-                    system_av_info.geometry.base_width,
-                    system_av_info.geometry.base_height,
-                    Environment::getInstance().isUseDepth(),
-                    Environment::getInstance().isUseStencil(),
-                    openglESVersion,
-                    Environment::getInstance().getPixelFormat()
-            };
+        Video::RenderingOptions renderingOptions{
+                Environment::getInstance().isUseHwAcceleration(),
+                system_av_info.geometry.base_width,
+                system_av_info.geometry.base_height,
+                Environment::getInstance().isUseDepth(),
+                Environment::getInstance().isUseStencil(),
+                openglESVersion,
+                Environment::getInstance().getPixelFormat()
+        };
 
-            auto newVideo = new Video(
-                    renderingOptions,
-                    fragmentShaderConfig,
-                    Environment::getInstance().isBottomLeftOrigin(),
-                    Environment::getInstance().getScreenRotation(),
-                    skipDuplicateFrames
-            );
+        auto newVideo = new Video(
+                renderingOptions,
+                fragmentShaderConfig,
+                Environment::getInstance().isBottomLeftOrigin(),
+                Environment::getInstance().getScreenRotation(),
+                skipDuplicateFrames
+        );
 
-            video = std::unique_ptr<Video>(newVideo);
+        video = std::unique_ptr<Video>(newVideo);
 
-            if (Environment::getInstance().getHwContextReset() != nullptr) {
-                Environment::getInstance().getHwContextReset()();
-            }
-        } catch (const std::exception &e) {
-            LOGE("onSurfaceCreated catch");
+        if (Environment::getInstance().getHwContextReset() != nullptr) {
+            Environment::getInstance().getHwContextReset()();
         }
     }
 
@@ -227,14 +223,14 @@ namespace libretrodroid {
             float xAxis,
             float yAxis
     ) {
-        LOGI("Received motion event: %d %.2f, %.2f", source, xAxis, yAxis);
+        LOGD("Received motion event: %d %.2f, %.2f", source, xAxis, yAxis);
         if (input) {
             input->onMotionEvent(port, source, xAxis, yAxis);
         }
     }
 
     void LibretroDroid::onKeyEvent(unsigned int port, int action, int keyCode) {
-        LOGI("Received key event with action (%d) and keycode (%d)", action, keyCode);
+        LOGD("Received key event with action (%d) and keycode (%d)", action, keyCode);
         if (input) {
             input->onKeyEvent(port, action, keyCode);
         }
@@ -253,7 +249,7 @@ namespace libretrodroid {
             bool duplicateFrames,
             const std::string &language
     ) {
-        LOGI("Performing libretrodroid create");
+        LOGD("Performing libretrodroid create");
 
         resetGlobalVariables();
 
@@ -269,11 +265,7 @@ namespace libretrodroid {
         frameSpeed = 1;
 
         core = std::make_unique<Core>(soFilePath);
-        if (!core) {
-            LOGE("core is not initialized. Call create() fail.");
-            throw std::runtime_error("core is not initialized");
-            return;
-        }
+
         core->retro_set_video_refresh(&callback_hw_video_refresh);
         core->retro_set_environment(&Environment::callback_environment);
         core->retro_set_audio_sample(&callback_audio_sample);
@@ -301,141 +293,107 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::loadGameFromPath(const std::string &gamePath) {
-        try {
-            LOGI("Performing libretrodroid loadGameFromPath");
-            if (!core) {
-                LOGE("core is not initialized. Call create() before loadGameFromPath().");
-                throw std::runtime_error("core is not initialized");
-                return;
-            }
-            struct retro_system_info system_info{};
-            core->retro_get_system_info(&system_info);
+        LOGD("Performing libretrodroid loadGameFromPath");
+        struct retro_system_info system_info{};
+        core->retro_get_system_info(&system_info);
 
-            struct retro_game_info game_info{};
-            game_info.path = Utils::cloneToCString(gamePath);
-            game_info.meta = nullptr;
+        struct retro_game_info game_info{};
+        game_info.path = Utils::cloneToCString(gamePath);
+        game_info.meta = nullptr;
 
-            if (system_info.need_fullpath) {
-                game_info.data = nullptr;
-                game_info.size = 0;
-            } else {
-                struct Utils::ReadResult file = Utils::readFileAsBytes(gamePath);
-                game_info.data = file.data;
-                game_info.size = file.size;
-            }
-
-            bool result = core->retro_load_game(&game_info);
-            if (!result) {
-                LOGE("Cannot load game. Leaving.");
-                throw std::runtime_error("Cannot load game");
-            } else {
-                afterGameLoad();
-            }
-        } catch (const std::exception &e) {
-            LOGE("Cannot load game. Leaving. catch");
+        if (system_info.need_fullpath) {
+            game_info.data = nullptr;
+            game_info.size = 0;
+        } else {
+            struct Utils::ReadResult file = Utils::readFileAsBytes(gamePath);
+            game_info.data = file.data;
+            game_info.size = file.size;
         }
+
+        bool result = core->retro_load_game(&game_info);
+        if (!result) {
+            LOGE("Cannot load game. Leaving.");
+            throw std::runtime_error("Cannot load game");
+        }
+
+        afterGameLoad();
     }
 
     void LibretroDroid::loadGameFromBytes(const int8_t *data, size_t size) {
-        try {
-            LOGI("Performing libretrodroid loadGameFromBytes");
-            if (!core) {
-                LOGE("core is not initialized. Call create() before loadGameFromBytes().");
-                throw std::runtime_error("core is not initialized");
-                return;
-            }
-            struct retro_system_info system_info{};
-            core->retro_get_system_info(&system_info);
+        LOGD("Performing libretrodroid loadGameFromBytes");
 
-            struct retro_game_info game_info{};
-            game_info.path = nullptr;
-            game_info.meta = nullptr;
+        struct retro_system_info system_info{};
+        core->retro_get_system_info(&system_info);
 
-            if (system_info.need_fullpath) {
-                game_info.data = nullptr;
-                game_info.size = 0;
-            } else {
-                game_info.data = data;
-                game_info.size = size;
-            }
+        struct retro_game_info game_info{};
+        game_info.path = nullptr;
+        game_info.meta = nullptr;
 
-            bool result = core->retro_load_game(&game_info);
-            if (!result) {
-                LOGE("Cannot load game. Leaving.");
-                /*
-                    throw std::runtime_error("Cannot load game");
-                */
-            } else {
-                afterGameLoad();
-            }
-        } catch (const std::exception &e) {
-            LOGE("Cannot load game. Leaving. catch");
+        if (system_info.need_fullpath) {
+            game_info.data = nullptr;
+            game_info.size = 0;
+        } else {
+            game_info.data = data;
+            game_info.size = size;
         }
+
+        bool result = core->retro_load_game(&game_info);
+        if (!result) {
+            LOGE("Cannot load game. Leaving.");
+            throw std::runtime_error("Cannot load game");
+        }
+
+        afterGameLoad();
     }
 
     void LibretroDroid::loadGameFromVirtualFiles(std::vector <VFSFile> virtualFiles) {
-        try {
-            if (!core) {
-                LOGE("core is not initialized. Call create() before loadGameFromVirtualFiles().");
-                throw std::runtime_error("core is not initialized");
-                return;
-            }
-            LOGI("Performing libretrodroid loadGameFromVirtualFiles");
-            struct retro_system_info system_info{};
-            core->retro_get_system_info(&system_info);
+        LOGD("Performing libretrodroid loadGameFromVirtualFiles");
+        struct retro_system_info system_info{};
+        core->retro_get_system_info(&system_info);
 
-            if (virtualFiles.empty()) {
-                LOGE("Calling loadGameFromVirtualFiles without any file.");
-                throw std::runtime_error("Calling loadGameFromVirtualFiles without any file.");
-            }
-
-            std::string firstFilePath = virtualFiles[0].getFileName();
-            int firstFileFD = virtualFiles[0].getFD();
-
-            bool loadUsingVFS = system_info.need_fullpath || virtualFiles.size() > 1;
-
-            struct retro_game_info game_info{};
-            game_info.path = Utils::cloneToCString(firstFilePath);
-            game_info.meta = nullptr;
-
-            if (loadUsingVFS) {
-                VFS::getInstance().initialize(std::move(virtualFiles));
-            }
-
-            if (loadUsingVFS) {
-                game_info.data = nullptr;
-                game_info.size = 0;
-            } else {
-                struct Utils::ReadResult file = Utils::readFileAsBytes(firstFileFD);
-                game_info.data = file.data;
-                game_info.size = file.size;
-            }
-
-            bool result = core->retro_load_game(&game_info);
-            if (!result) {
-                LOGE("Cannot load game. Leaving.");
-                /*
-                throw std::runtime_error("Cannot load game");
-                */
-            } else {
-                afterGameLoad();
-            }
-        } catch (const std::exception &e) {
-            LOGE("Cannot load game. Leaving. catch");
+        if (virtualFiles.empty()) {
+            LOGE("Calling loadGameFromVirtualFiles without any file.");
+            throw std::runtime_error("Calling loadGameFromVirtualFiles without any file.");
         }
+
+        std::string firstFilePath = virtualFiles[0].getFileName();
+        int firstFileFD = virtualFiles[0].getFD();
+
+        bool loadUsingVFS = system_info.need_fullpath || virtualFiles.size() > 1;
+
+        struct retro_game_info game_info{};
+        game_info.path = Utils::cloneToCString(firstFilePath);
+        game_info.meta = nullptr;
+
+        if (loadUsingVFS) {
+            VFS::getInstance().initialize(std::move(virtualFiles));
+        }
+
+        if (loadUsingVFS) {
+            game_info.data = nullptr;
+            game_info.size = 0;
+        } else {
+            struct Utils::ReadResult file = Utils::readFileAsBytes(firstFileFD);
+            game_info.data = file.data;
+            game_info.size = file.size;
+        }
+
+        bool result = core->retro_load_game(&game_info);
+        if (!result) {
+            LOGE("Cannot load game. Leaving.");
+            throw std::runtime_error("Cannot load game");
+        }
+
+        afterGameLoad();
     }
 
     void LibretroDroid::destroy() {
-        LOGI("LibretroDroid::destroy()");
+        LOGD("Performing libretrodroid destroy");
 
         if (Environment::getInstance().getHwContextDestroy() != nullptr) {
             Environment::getInstance().getHwContextDestroy()();
         }
-        if (!core) {
-            LOGE("core is not initialized. Call create() before destroy().");
-            throw std::runtime_error("core is not initialized");
-            return;
-        }
+
         core->retro_unload_game();
         core->retro_deinit();
 
@@ -450,44 +408,32 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::resume() {
-        LOGI("Call resume");
+        LOGD("Performing libretrodroid resume");
         try {
             input = std::make_unique<Input>();
-            if (!fpsSync || !audio) {
-                if (!fpsSync)
-                    LOGE("fpsSync is not initialized. Call create() before step().");
-                if (!audio)
-                    LOGE("audio is not initialized. Call create() before step().");
-                afterGameLoad();
-            }
+
             fpsSync->reset();
             audio->start();
-        } catch (const std::exception &e) {
-            // Xử lý lỗi
-            std::cerr << "Đã xảy ra lỗi: " << e.what() << std::endl;
+        } catch (...) {
+            LOGE("Error LibretroDroid::resume")
         }
     }
 
     void LibretroDroid::pause() {
-        LOGI("Performing libretrodroid pause");
-        if (!audio) {
-            LOGE("audio is not initialized. Call create() before pause().");
-            throw std::runtime_error("audio is not initialized");
-        }
-        audio->stop();
+        LOGD("Performing libretrodroid pause");
+        try {
+            audio->stop();
 
-        input = nullptr;
+            input = nullptr;
+        } catch (...) {
+            LOGE("Error LibretroDroid::pause")
+        }
     }
 
     void LibretroDroid::step() {
-        LOGI("Stepping into retro_run()");
+        LOGD("Stepping into retro_run()");
         try {
             unsigned frames = 1;
-            if (!core || !video || !audio || !fpsSync) {
-                LOGE("Param is not initialized. Call create() before step().");
-                throw std::runtime_error("Param is not initialized");
-                return;
-            }
             if (fpsSync) {
                 unsigned requestedFrames = fpsSync->advanceFrames();
 
@@ -527,12 +473,9 @@ namespace libretrodroid {
 
                 video->updateRotation(Environment::getInstance().getScreenRotation());
             }
-        } catch (const std::exception &e) {
-            // Block of code to handle errors
         } catch (...) {
-            LOGE("Unknown exception caught in step method.");
+            LOGE("Error LibretroDroid::step")
         }
-
     }
 
     float LibretroDroid::getAspectRatio() {
@@ -606,38 +549,31 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::reset() {
-        if (!core) {
-            LOGE("Core is not initialized. Call create() before retro_reset().");
-            throw std::runtime_error("Core is not initialized");
+        try {
+            core->retro_reset();
+        } catch (...) {
+            LOGE("Error LibretroDroid::reset")
         }
-        core->retro_reset();
     }
 
     std::pair<int8_t *, size_t> LibretroDroid::serializeState() {
         size_t size = core->retro_serialize_size();
         auto data = new int8_t[size];
-        if (!core) {
-            LOGE("Core is not initialized. Call create() before serializeState().");
-            throw std::runtime_error("Core is not initialized");
-        }
+
         core->retro_serialize(data, size);
 
         return std::pair(data, size);
     }
 
     void LibretroDroid::resetCheat() {
-        if (!core) {
-            LOGE("Core is not initialized. Call create() before resetCheat().");
-            throw std::runtime_error("Core is not initialized");
+        try {
+            core->retro_cheat_reset();
+        } catch (...) {
+            LOGE("Error LibretroDroid::resetCheat")
         }
-        core->retro_cheat_reset();
     }
 
     void LibretroDroid::setCheat(unsigned index, bool enabled, const std::string &code) {
-        if (!core) {
-            LOGE("Core is not initialized. Call create() before setCheat().");
-            throw std::runtime_error("Core is not initialized");
-        }
         core->retro_cheat_set(index, enabled, Utils::cloneToCString(code));
     }
 
@@ -651,11 +587,6 @@ namespace libretrodroid {
 
     void LibretroDroid::afterGameLoad() {
         struct retro_system_av_info system_av_info{};
-        LOGI("Call afterGameLoad");
-        if (!core) {
-            LOGE("Core is not initialized. Call create() before afterGameLoad().");
-            throw std::runtime_error("Core is not initialized");
-        }
         core->retro_get_system_av_info(&system_av_info);
 
         fpsSync = std::make_unique<FPSSync>(system_av_info.timing.fps, screenRefreshRate);
