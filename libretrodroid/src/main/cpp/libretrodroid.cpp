@@ -189,7 +189,7 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::onSurfaceCreated() {
-        LOGD("Performing libretrodroid onSurfaceCreated");
+        LOGI("Performing libretrodroid onSurfaceCreated");
         struct retro_system_av_info system_av_info{};
         try {
             core->retro_get_system_av_info(&system_av_info);
@@ -198,7 +198,7 @@ namespace libretrodroid {
         } catch (...) {
             LOGE("Unknown error in onSurfaceCreated");
         }
-
+        LOGI("Performing libretrodroid onSurfaceCreated retro_get_system_av_info");
         video = nullptr;
         try {
             Video::RenderingOptions renderingOptions{
@@ -210,7 +210,7 @@ namespace libretrodroid {
                     openglESVersion,
                     Environment::getInstance().getPixelFormat()
             };
-
+            LOGI("Performing libretrodroid onSurfaceCreated Video");
             auto newVideo = new Video(
                     renderingOptions,
                     fragmentShaderConfig,
@@ -218,12 +218,13 @@ namespace libretrodroid {
                     Environment::getInstance().getScreenRotation(),
                     skipDuplicateFrames
             );
-
+            LOGI("Performing libretrodroid onSurfaceCreated newVideo");
             video = std::unique_ptr<Video>(newVideo);
 
             if (Environment::getInstance().getHwContextReset() != nullptr) {
                 Environment::getInstance().getHwContextReset()();
             }
+            LOGI("Performing libretrodroid onSurfaceCreated getHwContextReset");
         } catch (const std::exception &e) {
             LOGE("Exception in onSurfaceCreated: %s", e.what());
         } catch (...) {
@@ -312,14 +313,14 @@ namespace libretrodroid {
 
     void LibretroDroid::loadGameFromPath(const std::string &gamePath) {
         try {
-            LOGD("Performing libretrodroid loadGameFromPath");
+            LOGI("Performing libretrodroid loadGameFromPath");
             struct retro_system_info system_info{};
             core->retro_get_system_info(&system_info);
 
             struct retro_game_info game_info{};
             game_info.path = Utils::cloneToCString(gamePath);
             game_info.meta = nullptr;
-
+            LOGI("Performing libretrodroid loadGameFromPath retro_game_info");
             if (system_info.need_fullpath) {
                 game_info.data = nullptr;
                 game_info.size = 0;
@@ -329,6 +330,7 @@ namespace libretrodroid {
                 game_info.size = file.size;
             }
 
+            LOGI("Performing libretrodroid loadGameFromPath retro_load_game B");
             bool result = core->retro_load_game(&game_info);
             if (!result) {
                 LOGE("Cannot load game. Leaving.");

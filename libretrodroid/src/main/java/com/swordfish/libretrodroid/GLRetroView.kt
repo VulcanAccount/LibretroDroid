@@ -305,22 +305,26 @@ class GLRetroView(
 
     // These functions are called from the GL thread.
     private fun initializeCore() = catchExceptions {
+        Log.i("libretrodroid","Performing initializeCore");
         if (isGameLoaded) return@catchExceptions
         when {
             data.gameFilePath != null -> loadGameFromPath(data.gameFilePath!!)
             data.gameFileBytes != null -> loadGameFromBytes(data.gameFileBytes!!)
             data.gameVirtualFiles.isNotEmpty() -> loadGameFromVirtualFiles(data.gameVirtualFiles)
         }
+        Log.i("libretrodroid","Performing  loadGame");
         data.saveRAMState?.let {
             LibretroDroid.unserializeSRAM(data.saveRAMState)
             data.saveRAMState = null
         }
+        Log.i("libretrodroid","Performing   LibretroDroid.onSurfaceCreated()");
         LibretroDroid.onSurfaceCreated()
         isGameLoaded = true
 
         KtUtils.runOnUIThread {
             lifecycle?.addObserver(RenderLifecycleObserver())
         }
+        Log.i("libretrodroid","Performing  RenderLifecycleObserver");
     }
 
     private fun loadGameFromVirtualFiles(virtualFiles: List<VirtualFile>) {
