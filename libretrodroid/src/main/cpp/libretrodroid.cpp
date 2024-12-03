@@ -56,7 +56,7 @@ namespace libretrodroid {
             unsigned height,
             size_t pitch
     ) {
-        LOGD("hw video refresh callback called %i %i", width, height);
+        LOGI("hw video refresh callback called %i %i", width, height);
         LibretroDroid::getInstance().handleVideoRefresh(data, width, height, pitch);
     }
 
@@ -180,12 +180,12 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::onSurfaceChanged(unsigned int width, unsigned int height) {
-        LOGD("Performing libretrodroid onSurfaceChanged");
+        LOGI("Performing libretrodroid onSurfaceChanged");
         video->updateScreenSize(width, height);
     }
 
     void LibretroDroid::onSurfaceCreated() {
-        LOGD("Performing libretrodroid onSurfaceCreated");
+        LOGI("Performing libretrodroid onSurfaceCreated");
 
         struct retro_system_av_info system_av_info{};
         core->retro_get_system_av_info(&system_av_info);
@@ -223,14 +223,14 @@ namespace libretrodroid {
             float xAxis,
             float yAxis
     ) {
-        LOGD("Received motion event: %d %.2f, %.2f", source, xAxis, yAxis);
+        LOGI("Received motion event: %d %.2f, %.2f", source, xAxis, yAxis);
         if (input) {
             input->onMotionEvent(port, source, xAxis, yAxis);
         }
     }
 
     void LibretroDroid::onKeyEvent(unsigned int port, int action, int keyCode) {
-        LOGD("Received key event with action (%d) and keycode (%d)", action, keyCode);
+        LOGI("Received key event with action (%d) and keycode (%d)", action, keyCode);
         if (input) {
             input->onKeyEvent(port, action, keyCode);
         }
@@ -249,7 +249,7 @@ namespace libretrodroid {
             bool duplicateFrames,
             const std::string &language
     ) {
-        LOGD("Performing libretrodroid create");
+        LOGI("Performing libretrodroid create");
 
         resetGlobalVariables();
 
@@ -298,7 +298,7 @@ namespace libretrodroid {
 
     void LibretroDroid::loadGameFromPath(const std::string &gamePath) {
         try {
-            LOGD("Performing libretrodroid loadGameFromPath");
+            LOGI("Performing libretrodroid loadGameFromPath");
             if (!core) {
                 LOGE("core is not initialized. Call create() before loadGameFromPath().");
                 throw std::runtime_error("core is not initialized");
@@ -334,7 +334,7 @@ namespace libretrodroid {
 
     void LibretroDroid::loadGameFromBytes(const int8_t *data, size_t size) {
         try {
-            LOGD("Performing libretrodroid loadGameFromBytes");
+            LOGI("Performing libretrodroid loadGameFromBytes");
             if (!core) {
                 LOGE("core is not initialized. Call create() before loadGameFromBytes().");
                 throw std::runtime_error("core is not initialized");
@@ -376,7 +376,7 @@ namespace libretrodroid {
                 throw std::runtime_error("core is not initialized");
                 return;
             }
-            LOGD("Performing libretrodroid loadGameFromVirtualFiles");
+            LOGI("Performing libretrodroid loadGameFromVirtualFiles");
             struct retro_system_info system_info{};
             core->retro_get_system_info(&system_info);
 
@@ -465,7 +465,7 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::pause() {
-        LOGD("Performing libretrodroid pause");
+        LOGI("Performing libretrodroid pause");
         if (!audio) {
             LOGE("audio is not initialized. Call create() before pause().");
             throw std::runtime_error("audio is not initialized");
@@ -476,7 +476,7 @@ namespace libretrodroid {
     }
 
     void LibretroDroid::step() {
-        LOGD("Stepping into retro_run()");
+        LOGI("Stepping into retro_run()");
         try {
             unsigned frames = 1;
             if (!core || !video || !audio || !fpsSync) {
