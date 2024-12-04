@@ -221,9 +221,12 @@ namespace libretrodroid {
             LOGI("Performing libretrodroid onSurfaceCreated newVideo");
             video = std::unique_ptr<Video>(newVideo);
 
-//            if (Environment::getInstance().getHwContextReset() != nullptr) {
-//                Environment::getInstance().getHwContextReset()();
-//            }
+            LOGI("libretrodroid Environment::getInstance().getHwContextReset()");
+            if (Environment::getInstance().getHwContextReset() != nullptr) {
+                LOGI("libretrodroid .getHwContextReset()");
+                Environment::getInstance().getHwContextReset();
+                LOGI("libretrodroid .getHwContextReset() done");
+            }
             LOGI("Performing libretrodroid onSurfaceCreated getHwContextReset");
         } catch (const std::exception &e) {
             LOGE("Exception in onSurfaceCreated: %s", e.what());
@@ -267,6 +270,7 @@ namespace libretrodroid {
         LOGD("Performing libretrodroid create");
 
         try {
+            LOGI("Performing libretrodroid create");
             resetGlobalVariables();
 
             Environment::getInstance().initialize(systemDir, savesDir,
@@ -306,6 +310,7 @@ namespace libretrodroid {
             fragmentShaderConfig = shaderConfig;
 
             rumble = std::make_unique<Rumble>();
+            LOGI("Performing libretrodroid create done");
         } catch (...) {
             LOGE("Unknown error in create");
         }
@@ -338,6 +343,7 @@ namespace libretrodroid {
             }
 
             afterGameLoad();
+            LOGI("Performing libretrodroid loadGameFromPath done");
         } catch (...) {
             LOGE("Unknown error in create");
         }
@@ -346,6 +352,7 @@ namespace libretrodroid {
     void LibretroDroid::loadGameFromBytes(const int8_t *data, size_t size) {
         LOGD("Performing libretrodroid loadGameFromBytes");
         try {
+            LOGI("Performing libretrodroid loadGameFromBytes");
             struct retro_system_info system_info{};
             core->retro_get_system_info(&system_info);
 
@@ -368,12 +375,14 @@ namespace libretrodroid {
             }
 
             afterGameLoad();
+            LOGI("Performing libretrodroid loadGameFromBytes done");
         } catch (...) {
             LOGE("Unknown error in create");
         }
     }
 
     void LibretroDroid::loadGameFromVirtualFiles(std::vector <VFSFile> virtualFiles) {
+        LOGI("LibretroDroid loadGameFromVirtualFiles");
         LOGD("Performing libretrodroid loadGameFromVirtualFiles");
         try {
             struct retro_system_info system_info{};
@@ -413,12 +422,14 @@ namespace libretrodroid {
             }
 
             afterGameLoad();
+            LOGI("LibretroDroid loadGameFromVirtualFiles done");
         } catch (...) {
             LOGE("Unknown error in create");
         }
     }
 
     void LibretroDroid::destroy() {
+        LOGI("LibretroDroid destroy");
         LOGD("Performing libretrodroid destroy");
         try {
             if (Environment::getInstance().getHwContextDestroy() != nullptr) {
@@ -436,18 +447,20 @@ namespace libretrodroid {
 
             Environment::getInstance().deinitialize();
             VFS::getInstance().deinitialize();
+            LOGI("LibretroDroid destroy done");
         } catch (...) {
             LOGE("Error LibretroDroid::destroy");
         }
     }
 
     void LibretroDroid::resume() {
-        LOGD("Performing libretrodroid resume");
+        LOGI("LibretroDroid resume");
         try {
             input = std::make_unique<Input>();
 
             fpsSync->reset();
             audio->start();
+            LOGI("LibretroDroid resume done");
         } catch (...) {
             LOGE("Error LibretroDroid::resume");
         }
@@ -467,6 +480,7 @@ namespace libretrodroid {
     void LibretroDroid::step() {
         LOGD("Stepping into retro_run()");
         try {
+            LOGI("LibretroDroid step");
             unsigned frames = 1;
             if (fpsSync) {
                 unsigned requestedFrames = fpsSync->advanceFrames();
@@ -507,6 +521,7 @@ namespace libretrodroid {
 
                 video->updateRotation(Environment::getInstance().getScreenRotation());
             }
+            LOGI("LibretroDroid step done");
         } catch (...) {
             LOGE("Error LibretroDroid::step");
         }
@@ -584,7 +599,9 @@ namespace libretrodroid {
 
     void LibretroDroid::reset() {
         try {
+            LOGI("LibretroDroid reset");
             core->retro_reset();
+            LOGI("LibretroDroid reset done");
         } catch (...) {
             LOGE("Error LibretroDroid::reset");
         }
@@ -601,14 +618,18 @@ namespace libretrodroid {
 
     void LibretroDroid::resetCheat() {
         try {
+            LOGI("LibretroDroid resetCheat");
             core->retro_cheat_reset();
+            LOGI("LibretroDroid resetCheat done");
         } catch (...) {
             LOGE("Error LibretroDroid::resetCheat");
         }
     }
 
     void LibretroDroid::setCheat(unsigned index, bool enabled, const std::string &code) {
+        LOGI("LibretroDroid setCheat");
         core->retro_cheat_set(index, enabled, Utils::cloneToCString(code));
+        LOGI("LibretroDroid setCheat done");
     }
 
     bool LibretroDroid::requiresVideoRefresh() const {
@@ -621,6 +642,7 @@ namespace libretrodroid {
 
     void LibretroDroid::afterGameLoad() {
         try {
+            LOGI("LibretroDroid afterGameLoad");
             struct retro_system_av_info system_av_info{};
             core->retro_get_system_av_info(&system_av_info);
 
@@ -638,6 +660,7 @@ namespace libretrodroid {
             updateAudioSampleRateMultiplier();
 
             defaultAspectRatio = findDefaultAspectRatio(system_av_info);
+            LOGI("LibretroDroid afterGameLoad done");
         } catch (...) {
 
         }

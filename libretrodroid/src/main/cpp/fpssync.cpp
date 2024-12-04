@@ -64,7 +64,6 @@ namespace libretrodroid {
 //            lastFrame = MIN_TIME;
             isInitialized = false;
             lastFrame = std::chrono::steady_clock::now();
-            LOGE("An unexpected error occurred during reset.");
         } catch (...) {
 
         }
