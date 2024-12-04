@@ -488,22 +488,22 @@ namespace libretrodroid {
                 // If the application runs too slow it's better to just skip those frames.
                 frames = std::min(requestedFrames, 2u);
             }
-
+            LOGI("LibretroDroid step fpsSync");
             for (size_t i = 0; i < frames * frameSpeed; i++)
                 core->retro_run();
-
+            LOGI("LibretroDroid step retro_run");
             if (video && !video->rendersInVideoCallback()) {
                 video->renderFrame();
             }
-
+            LOGI("LibretroDroid step renderFrame");
             if (fpsSync) {
                 fpsSync->wait();
             }
-
+            LOGI("LibretroDroid step wait");
             if (rumble && rumbleEnabled) {
                 rumble->fetchFromEnvironment();
             }
-
+            LOGI("LibretroDroid step fetchFromEnvironment");
             // Some games override the core geometry at runtime. These fields get updated in retro_run().
             if (video && Environment::getInstance().isGameGeometryUpdated()) {
                 Environment::getInstance().clearGameGeometryUpdated();
@@ -515,10 +515,11 @@ namespace libretrodroid {
 
                 dirtyVideo = true;
             }
-
+            LOGI("LibretroDroid step isGameGeometryUpdated");
             if (video && Environment::getInstance().isScreenRotationUpdated()) {
+                LOGI("LibretroDroid step clearScreenRotationUpdated");
                 Environment::getInstance().clearScreenRotationUpdated();
-
+                LOGI("LibretroDroid step getScreenRotation");
                 video->updateRotation(Environment::getInstance().getScreenRotation());
             }
             LOGI("LibretroDroid step done");
